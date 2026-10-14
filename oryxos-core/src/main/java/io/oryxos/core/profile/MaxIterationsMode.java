@@ -15,6 +15,10 @@ public enum MaxIterationsMode {
   public static final MaxIterationsMode DEFAULT = ERROR;
 
   /** 宽松解析 frontmatter 值：去空白、大小写不敏感；空值或无法识别时回退 {@link #DEFAULT}。 */
+  @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(
+      value = "IMPROPER_UNICODE",
+      justification =
+          "Enum names (ERROR/SUMMARIZE) are ASCII identifiers; equalsIgnoreCase is locale-independent and is the intended case-fold here.")
   public static MaxIterationsMode fromConfig(String raw) {
     if (raw == null) {
       return DEFAULT;
