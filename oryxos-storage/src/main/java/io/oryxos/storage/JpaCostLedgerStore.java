@@ -5,6 +5,7 @@ import io.oryxos.core.cost.CostFacets;
 import io.oryxos.core.cost.CostLedgerEntry;
 import io.oryxos.core.cost.CostLedgerStore;
 import io.oryxos.core.cost.CostSourceKind;
+import java.time.Instant;
 import java.util.List;
 
 public class JpaCostLedgerStore implements CostLedgerStore {
@@ -64,6 +65,23 @@ public class JpaCostLedgerStore implements CostLedgerStore {
     return to == null || (at != null && at.isBefore(to));
   }
 
+  /**
+   * 开区间哨兵：{@code created_at} 非空（实体与两个 vendor 的迁移都是 NOT NULL），所以 [EPOCH, 9999) 覆盖全部行，末端的排他口径与 {@link
+   * #inRange} 一致。传哨兵而不是传 null，是因为 Postgres 无法为「{@code ? is null}」里的 null 时间参数推断类型，会以 {@code could
+   * not determine data type of parameter} 直接失败 —— 这条只有两库同套的契约用例拦得住（SQLite 不报错）。
+   */
+  private static final Instant OPEN_START = Instant.EPOCH;
+
+  private static final Instant OPEN_END = Instant.parse("9999-12-31T23:59:59Z");
+
+  private static Instant openStart(CostAttributionQuery q) {
+    return q.from() == null ? OPEN_START : q.from();
+  }
+
+  private static Instant openEnd(CostAttributionQuery q) {
+    return q.to() == null ? OPEN_END : q.to();
+  }
+
   @Override
   public long sumLlmCostMicros(CostAttributionQuery query) {
     CostAttributionQuery q = normalize(query);
@@ -73,7 +91,9 @@ public class JpaCostLedgerStore implements CostLedgerStore {
         blank(q.agentName()),
         blank(q.teamId()),
         blank(q.provider()),
-        blank(q.model()));
+        blank(q.model()),
+        openStart(q),
+        openEnd(q));
   }
 
   @Override
@@ -85,7 +105,9 @@ public class JpaCostLedgerStore implements CostLedgerStore {
         blank(q.agentName()),
         blank(q.teamId()),
         blank(q.provider()),
-        blank(q.model()));
+        blank(q.model()),
+        openStart(q),
+        openEnd(q));
   }
 
   @Override
