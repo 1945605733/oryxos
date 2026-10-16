@@ -1,6 +1,7 @@
 package io.oryxos.storage;
 
 import io.oryxos.core.cost.CostAttributionQuery;
+import io.oryxos.core.cost.CostFacets;
 import io.oryxos.core.cost.CostLedgerEntry;
 import io.oryxos.core.cost.CostLedgerStore;
 import io.oryxos.core.cost.CostSourceKind;
@@ -51,7 +52,16 @@ public class JpaCostLedgerStore implements CostLedgerStore {
             blank(q.model()))
         .stream()
         .map(JpaCostLedgerStore::toDomain)
+        .filter(e -> inRange(e.createdAt(), q.from(), q.to()))
         .toList();
+  }
+
+  private static boolean inRange(
+      java.time.Instant at, java.time.Instant from, java.time.Instant to) {
+    if (from != null && (at == null || at.isBefore(from))) {
+      return false;
+    }
+    return to == null || (at != null && at.isBefore(to));
   }
 
   @Override
@@ -76,6 +86,15 @@ public class JpaCostLedgerStore implements CostLedgerStore {
         blank(q.teamId()),
         blank(q.provider()),
         blank(q.model()));
+  }
+
+  @Override
+  public CostFacets facets() {
+    return new CostFacets(
+        repository.distinctAgents(),
+        repository.distinctProviders(),
+        repository.distinctModels(),
+        repository.distinctTeams());
   }
 
   private static CostAttributionQuery normalize(CostAttributionQuery query) {

@@ -63,4 +63,21 @@ public interface CostLedgerEntryRepository extends JpaRepository<CostLedgerEntry
       @Param("teamId") String teamId,
       @Param("provider") String provider,
       @Param("model") String model);
+
+  /** 去重候选值（053 筛选器下拉）：非空、按值排序。 */
+  @Query(
+      "select distinct e.agentName from CostLedgerEntryEntity e where e.agentName is not null order by e.agentName")
+  List<String> distinctAgents();
+
+  @Query(
+      "select distinct e.provider from CostLedgerEntryEntity e where e.provider is not null order by e.provider")
+  List<String> distinctProviders();
+
+  @Query(
+      "select distinct e.model from CostLedgerEntryEntity e where e.model is not null order by e.model")
+  List<String> distinctModels();
+
+  @Query(
+      "select distinct e.teamId from CostLedgerEntryEntity e where e.teamId is not null order by e.teamId")
+  List<String> distinctTeams();
 }
