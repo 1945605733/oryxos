@@ -237,6 +237,9 @@ async function loadToolUsage() {
 }
 
 function reloadAll() {
+  // 筛选/时间范围一变就回到第 1 页：停在第 3 页时改条件会切出一段空片，而 totalPages 已经变小，
+  // 页面就成了「表头在、行空、页码显示 3 / 1」——空态提示又用的是未分页的 sessionRows，也不会出现。
+  detail.page = 1
   load()
   loadTrend()
   loadToolUsage()
